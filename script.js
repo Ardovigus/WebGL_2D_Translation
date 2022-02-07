@@ -1,26 +1,28 @@
 function main() {
     var canvas = document.querySelector("#canvas");
     var gl = canvas.getContext("webgl");
-
+    
     if (!gl) {
         alert("!gl occured");
         return;
     }
   
     var program = webglUtils.createProgramFromScripts(gl, ["vertex-shader-2d", "fragment-shader-2d"]);
+    gl.useProgram(program);
   
     var positionLocation = gl.getAttribLocation(program, "a_position");
   
     var resolutionLocation = gl.getUniformLocation(program, "u_resolution");
     var colorLocation = gl.getUniformLocation(program, "u_color");
+    var translationLocation = gl.getUniformLocation(program, "u_translation");
   
     var positionBuffer = gl.createBuffer();
   
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
   
+    setGeometry(gl, 0, 0);
+  
     var translation = [0, 0];
-    var width = 100;
-    var height = 30;
     var color = [Math.random(), Math.random(), Math.random(), 1];
   
     drawScene();
@@ -29,10 +31,10 @@ function main() {
     webglLessonsUI.setupSlider("#y", {slide: updatePosition(1), max: screen.height});
   
     function updatePosition(index) {
-      return function(event, ui) {
-        translation[index] = ui.value;
-        drawScene();
-      };
+        return function(event, ui) {
+            translation[index] = ui.value;
+            drawScene();
+        };
     }
   
     function drawScene() {
@@ -48,8 +50,6 @@ function main() {
     
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     
-        setRectangle(gl, translation[0], translation[1], width, height);
-    
         var size = 2;
         var type = gl.FLOAT;
         var normalize = false;
@@ -62,29 +62,44 @@ function main() {
     
         gl.uniform4fv(colorLocation, color);
     
+        gl.uniform2fv(translationLocation, translation);
+    
         var primitiveType = gl.TRIANGLES;
         var offset = 0;
-        var count = 6;
+        var count = 18;
         gl.drawArrays(primitiveType, offset, count);
     }
 }
   
-function setRectangle(gl, x, y, width, height) {
-    var x1 = x;
-    var x2 = x + width;
-    var y1 = y;
-    var y2 = y + height;
+function setGeometry(gl, x, y) {
+    var width = 100;
+    var height = 150;
+    var thickness = Math.floor(Math.random() * (100 - 30 + 1) ) + 30;
     gl.bufferData(
         gl.ARRAY_BUFFER,
         new Float32Array([
-            x1, y1,
-            x2, y1,
-            x1, y2,
-            x1, y2,
-            x2, y1,
-            x2, y2,
+            x, y,
+            x + thickness, y,
+            x, y + height,
+            x, y + height,
+            x + thickness, y,
+            x + thickness, y + height,
+
+            x + thickness, y,
+            x + width, y,
+            x + thickness, y + thickness,
+            x + thickness, y + thickness,
+            x + width, y,
+            x + width, y + thickness,
+
+            x + thickness, y + thickness * 2,
+            x + width * 2 / 3, y + thickness * 2,
+            x + thickness, y + thickness * 3,
+            x + thickness, y + thickness * 3,
+            x + width * 2 / 3, y + thickness * 2,
+            x + width * 2 / 3, y + thickness * 3,
         ]),
         gl.STATIC_DRAW);
-  }
+}
   
 main();
